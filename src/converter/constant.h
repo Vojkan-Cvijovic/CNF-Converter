@@ -9,9 +9,6 @@ public:
     True();
 
     virtual std::ostream& print(std::ostream &out) const;
-    virtual bool eval(const Valuation &val) const;
-    virtual LiteralListList listDNF() const;
-    virtual LiteralListList listCNF() const;
 };
 
 class False : public AtomicFormula
@@ -20,9 +17,6 @@ public:
     False();
 
     virtual std::ostream& print(std::ostream &out) const;
-    virtual bool eval(const Valuation &val) const;
-    virtual LiteralListList listDNF() const;
-    virtual LiteralListList listCNF() const;
 };
 
 

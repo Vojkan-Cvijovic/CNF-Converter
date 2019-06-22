@@ -21,14 +21,6 @@ Formula Iff::substitute(const Formula &what, const Formula &with) const
   return substituteImpl<Iff>(what, with);
 }
 
-bool Iff::eval(const Valuation &val) const
-{
-  Formula op1, op2;
-  std::tie(op1, op2) = operands();
-
-  return op1->eval(val) == op2->eval(val);
-}
-
 Formula Iff::simplify() const
 {
     GET_OPERANDS(simplifiedOp1, simplifiedOp2);
@@ -58,12 +50,3 @@ Formula Iff::nnf() const
                                  std::make_shared<Or>(op1->nnf(), std::make_shared<Not>(op2)->nnf()));
 }
 
-LiteralListList Iff::listDNF() const
-{
-    throw std::runtime_error{"Ekvivalencija se mora eliminisati tokom nff() procedure"};
-}
-
-LiteralListList Iff::listCNF() const
-{
-    throw std::runtime_error{"Ekvivalencija se mora eliminisati tokom nff() procedure"};
-}

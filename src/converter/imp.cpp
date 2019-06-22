@@ -19,14 +19,6 @@ Formula Imp::substitute(const Formula &what, const Formula &with) const
   return substituteImpl<Imp>(what, with);
 }
 
-bool Imp::eval(const Valuation &val) const
-{
-  Formula op1, op2;
-  std::tie(op1, op2) = operands();
-
-  return !op1->eval(val) || op2->eval(val);
-}
-
 Formula Imp::simplify() const
 {
     GET_OPERANDS(simplifiedOp1, simplifiedOp2);
@@ -53,15 +45,5 @@ Formula Imp::nnf() const
 {
     GET_OPERANDS(op1, op2);
     return std::make_shared<Or>(std::make_shared<Not>(op1)->nnf(), op2->nnf());
-}
-
-LiteralListList Imp::listDNF() const
-{
-    throw std::runtime_error{"Implikacija se mora eliminisati tokom nff() procedure"};
-}
-
-LiteralListList Imp::listCNF() const
-{
-    throw std::runtime_error{"Implikacija se mora eliminisati tokom nff() procedure"};
 }
 

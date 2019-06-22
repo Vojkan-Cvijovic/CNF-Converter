@@ -15,13 +15,6 @@ Formula And::substitute(const Formula &what, const Formula &with) const
     return substituteImpl<And>(what,with);
 }
 
-bool And::eval(const Valuation &val) const
-{
-    Formula op1, op2;
-    std::tie(op1, op2) = operands();
-    return op1->eval(val) && op2->eval(val);
-}
-
 Formula And::simplify() const
 {
     GET_OPERANDS(simplifiedOp1, simplifiedOp2);
@@ -47,17 +40,5 @@ Formula And::nnf() const
 {
     GET_OPERANDS(op1, op2);
     return std::make_shared<And>(op1->nnf(), op2->nnf());
-}
-
-LiteralListList And::listDNF() const
-{
-    GET_OPERANDS(op1, op2);
-    return BaseFormula::cross(op1->listDNF(), op2->listDNF());
-}
-
-LiteralListList And::listCNF() const
-{
-    GET_OPERANDS(op1, op2);
-    return BaseFormula::concatenate(op1->listCNF(), op2->listCNF());
 }
 

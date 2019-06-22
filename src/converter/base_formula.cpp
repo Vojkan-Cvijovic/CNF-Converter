@@ -1,4 +1,9 @@
+#include "and.h"
+#include "atom.h"
 #include "base_formula.h"
+#include "iff.h"
+#include "imp.h"
+#include "or.h"
 
 BaseFormula::BaseFormula(){
 
@@ -25,86 +30,75 @@ std::ostream& operator<<(std::ostream &out, const Formula &f)
     return f->print(out);
 }
 
-std::ostream & operator << (std::ostream & out, const LiteralListList & l)
-{
-  out << "[ ";
-  for(auto & ll :  l)
-    {
-      out << "[ ";
-      for(auto & f : ll)
-    {
-      out << f << " ";
-    }
-      out << "] ";
-    }
-  out << " ]";
-
-  return out;
-}
-
 BaseFormula::~BaseFormula()
 {
 
 }
-
-OptionalValuation BaseFormula::isSatisfiable() const
-{
-    AtomSet aset;
-    getAtoms(aset);
-    Valuation val{aset};
+Variable BaseFormula::getUniqueVarName(const AtomSet &atoms) {
+    Variable unique;
     do {
-        if(eval(val)){
-            return std::move(val);
-        }
-    } while(val.next());
-    return {};
+        unique = "s" + std::to_string(s_UniqueCounter++);
+    } while (atoms.find(unique) != atoms.end());
+
+    return unique;
 }
 
-OptionalValuation BaseFormula::isNotTautology() const{
-    AtomSet aset;
-    getAtoms(aset);
-    Valuation val{aset};
-    do{
-        if(!eval(val)){
-            return std::move(val);
-        }
-    } while(val.next());
-    return {};
-}
-
-void BaseFormula::printTruthTable(std::ostream &out) const{
-    AtomSet aset;
-    getAtoms(aset);
-    Valuation val{aset};
-    out << std::noboolalpha;
-    do {
-        out << val << "|" << eval(val) << "\n";
-    } while(val.next());
-}
-
-bool BaseFormula::isEquivalent(const Formula &f) const{
-    AtomSet aset;
-    getAtoms(aset);
-    f->getAtoms(aset);
-    Valuation val{aset};
-    do{
-        if(eval(val) != f->eval(val)){
-            return false;
-        }
-    } while(val.next());
-    return true;
-}
-
-LiteralListList BaseFormula::cross(const LiteralListList &l1, const LiteralListList &l2)
+Formula BaseFormula::tseitinTransformation()
 {
-    LiteralListList result;
-    result.reserve(l1.size() * l2.size());
-    for (const auto& outerL : l1) {
-        for (const auto& innerL : l2){
-            result.push_back(concatenate(outerL, innerL));
-        }
+    AtomSet atoms;
+    Formula simplified = simplify();
+
+    simplified->getAtoms(atoms);
+
+    Formula substitutedFormulas = nullptr;
+    bool isSubformula = false;
+    Formula result = _tseitinTransformation(simplified, atoms, substitutedFormulas, isSubformula);
+
+    if (substitutedFormulas.get() == nullptr) {
+        return result;
+    } else {
+        return std::make_shared<And>(result, substitutedFormulas);
+    }
+}
+
+Formula BaseFormula::_tseitinTransformation(const Formula &formula, AtomSet &atoms, Formula &substitutedFormulas, bool isSubformula) {
+    if (!isOfType<BinaryConnective>(formula)){
+        return formula;
     }
 
-    return result;
+    Formula op1, op2;
+    std::tie(op1, op2) = ((BinaryConnective*) formula.get())->operands();
+
+    Formula leftSubformula = _tseitinTransformation(op1, atoms, substitutedFormulas, true);
+    Formula rightSubformula = _tseitinTransformation(op2, atoms, substitutedFormulas, true);
+
+    Variable varName = getUniqueVarName(atoms);
+    Formula atom = std::make_shared<Atom>(varName);
+
+    Formula subformula;
+
+    if (isOfType<And>(formula)) {
+        subformula = std::make_shared<And>(leftSubformula, rightSubformula);
+    } else if(isOfType<Or>(formula)) {
+        subformula = std::make_shared<Or>(leftSubformula, rightSubformula);
+    } else if(isOfType<Imp>(formula)) {
+        subformula = std::make_shared<Imp>(leftSubformula, rightSubformula);
+    } else if(isOfType<Iff>(formula)) {
+        subformula = std::make_shared<Iff>(leftSubformula, rightSubformula);
+    } else {
+        throw std::runtime_error{"Unknown binary connective"};
+    }
+
+    if(isSubformula){
+        if (substitutedFormulas.get() == nullptr) {
+            // initialize substitutedFormulas
+            substitutedFormulas = std::make_shared<Iff>(atom, subformula);
+        } else {
+            // append substitution si <=> subformula
+            substitutedFormulas = std::make_shared<And>(substitutedFormulas, std::make_shared<Iff>(atom, subformula));
+        }
+        return atom;
+    }
+    return std::make_shared<Iff>(atom, subformula);
 }
 

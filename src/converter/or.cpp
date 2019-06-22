@@ -17,13 +17,6 @@ Formula Or::substitute(const Formula &what, const Formula &with) const
   return substituteImpl<Or>(what, with);
 }
 
-bool Or::eval(const Valuation &val) const
-{
-    Formula op1, op2;
-    std::tie(op1, op2) = operands();
-    return op1->eval(val) || op2->eval(val);
-}
-
 Formula Or::simplify() const
 {
     GET_OPERANDS(simplifiedOp1, simplifiedOp2);
@@ -50,16 +43,4 @@ Formula Or::nnf() const
 {
     GET_OPERANDS(op1, op2);
     return std::make_shared<Or>(op1->nnf(), op2->nnf());
-}
-
-LiteralListList Or::listDNF() const
-{
-    GET_OPERANDS(op1, op2);
-    return BaseFormula::concatenate(op1->listDNF(), op2->listDNF());
-}
-
-LiteralListList Or::listCNF() const
-{
-    GET_OPERANDS(op1, op2);
-    return BaseFormula::cross(op1->listCNF(), op2->listCNF());
 }

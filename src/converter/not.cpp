@@ -24,11 +24,6 @@ Formula Not::substitute(const Formula &what, const Formula &with) const
     return std::make_shared<Not>(operand()->substitute(what,with));
 }
 
-bool Not::eval(const Valuation &val) const
-{
-    return !operand()->eval(val);
-}
-
 Formula Not::simplify() const
 {
     Formula simplifiedOp = operand()->simplify();
@@ -76,11 +71,3 @@ Formula Not::nnf() const
     return std::const_pointer_cast<BaseFormula>(shared_from_this());
 }
 
-LiteralListList Not::listDNF() const
-{
-    return {{std::const_pointer_cast<BaseFormula>(shared_from_this())}};
-}
-
-LiteralListList Not::listCNF() const{
-    return {{std::const_pointer_cast<BaseFormula>(shared_from_this())}};
-}
